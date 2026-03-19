@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+
+# Rust / Cargo
+target/
+Cargo.lock
+
+# Tauri
+apps/desktop/src-tauri/target/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Turbo
+.turbo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# WASM build artifacts
+packages/core-wasm/pkg/

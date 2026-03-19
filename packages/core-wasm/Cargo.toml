@@ -1,0 +1,26 @@
+[package]
+name = "morphic-core-wasm"
+version = "0.0.1"
+edition = "2021"
+description = "Morphic core processing logic compiled to WebAssembly"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+# Image processing
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
+ravif = { version = "0.11", default-features = false }
+# JPEG XL
+jxl-oxide = "0.10"
+# Console logging in WASM
+console_error_panic_hook = "0.1"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[features]
+default = []

@@ -1,0 +1,19 @@
+{
+  "name": "morphic",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev --filter=!@morphic/desktop",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "build:desktop": "pnpm --filter @morphic/desktop tauri build",
+    "dev:desktop": "pnpm --filter @morphic/desktop tauri dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "prettier": "^3.5.0"
+  }
+}
