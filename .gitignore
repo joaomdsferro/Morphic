@@ -6,6 +6,7 @@ node_modules/
 .next/
 out/
 dist/
+apps/web/tsconfig.tsbuildinfo
 
 # Rust / Cargo
 target/
