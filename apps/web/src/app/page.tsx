@@ -363,7 +363,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-4 rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-4">
           {/* Format pills */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className="w-[4.5rem] shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-600">
+            <span className="w-18 shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-600">
               Convert to
             </span>
             <div className="flex flex-wrap gap-2">
@@ -387,7 +387,7 @@ export default function HomePage() {
           {/* Quality slider */}
           {showQuality && (
             <div className="flex items-center gap-3">
-              <span className="w-[4.5rem] shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-600">
+              <span className="w-18 shrink-0 text-[10px] font-semibold uppercase tracking-widest text-neutral-600">
                 Quality
               </span>
               <input
