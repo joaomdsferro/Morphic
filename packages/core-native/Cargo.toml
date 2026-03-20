@@ -10,7 +10,8 @@ name = "morphic_core_native"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 # Image processing
-image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif", "rayon"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif", "ico", "rayon"] }
+base64 = "0.22"
 ravif = "0.11"
 jxl-oxide = "0.10"
 # Parallel processing
