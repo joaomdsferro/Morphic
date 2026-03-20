@@ -32,6 +32,8 @@ pub fn supported_output_formats() -> Vec<String> {
         "webp".into(),
         "avif".into(),
         "jxl".into(),
+        "ico".into(),
+        "svg".into(),
     ]
 }
 
@@ -87,6 +89,21 @@ fn encode_image(
         }
         "avif" => {
             img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Avif)?;
+        }
+        "ico" => {
+            img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Ico)?;
+        }
+        "svg" => {
+            use base64::Engine as _;
+            let mut png_buf = Vec::new();
+            img.write_to(&mut std::io::Cursor::new(&mut png_buf), image::ImageFormat::Png)?;
+            let b64 = base64::engine::general_purpose::STANDARD.encode(&png_buf);
+            let w = img.width();
+            let h = img.height();
+            let svg = format!(
+                r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><image href="data:image/png;base64,{b64}" width="{w}" height="{h}"/></svg>"#
+            );
+            buf.extend_from_slice(svg.as_bytes());
         }
         fmt => {
             return Err(image::ImageError::Unsupported(

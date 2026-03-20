@@ -26,6 +26,8 @@ fn supported_formats() -> Vec<String> {
         "png".into(),
         "webp".into(),
         "avif".into(),
+        "ico".into(),
+        "svg".into(),
     ]
 }
 

@@ -12,7 +12,8 @@ wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 # Image processing
-image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif", "ico"] }
+base64 = "0.22"
 ravif = { version = "0.11", default-features = false }
 # JPEG XL
 jxl-oxide = "0.10"
