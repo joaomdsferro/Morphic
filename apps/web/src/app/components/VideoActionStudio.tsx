@@ -47,9 +47,9 @@ export function VideoActionStudio({ mode }: { mode: VideoMode }) {
         <p className="mt-1 text-xs text-neutral-500">MP4 · MOV · MKV · WebM</p>
       </label>
 
-      <section className="rounded-xl border border-amber-800/60 bg-amber-950/20 p-4">
-        <p className="text-sm font-medium text-amber-200">{actionLabel} page is available.</p>
-        <p className="mt-1 text-xs text-amber-300/80">
+      <section className="rounded-xl border border-neutral-700 bg-neutral-900/40 p-4">
+        <p className="text-sm font-medium text-neutral-200">{actionLabel} page is available.</p>
+        <p className="mt-1 text-xs text-neutral-400">
           The web route and upload flow are ready. Hook this page to your video processing engine to execute the final action.
         </p>
       </section>
