@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Footer } from "./components/Footer";
-import { ThemeToggle } from "./components/ThemeToggle";
+import { MainNav } from "./components/MainNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,9 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(() => {
+        <Script id="theme-init" strategy="beforeInteractive">{`(() => {
   try {
     const savedTheme = localStorage.getItem('morphic-theme');
     const theme = savedTheme === 'light' || savedTheme === 'dark'
@@ -31,9 +30,7 @@ export default function RootLayout({
     document.documentElement.dataset.theme = 'dark';
     document.documentElement.style.colorScheme = 'dark';
   }
-})();`,
-          }}
-        />
+})();`}</Script>
       </head>
       <body className="min-h-screen bg-(--background) text-(--foreground)">
         <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6">
@@ -44,24 +41,7 @@ export default function RootLayout({
               </span>
               <span className="text-sm font-bold tracking-tight">Morphic</span>
             </Link>
-            <nav className="flex flex-wrap items-center gap-2 text-xs font-medium text-neutral-300">
-              <Link className="rounded-md border border-neutral-700 px-2.5 py-1 hover:bg-neutral-800" href="/convert/images">
-                Convert Images
-              </Link>
-              <Link className="rounded-md border border-neutral-700 px-2.5 py-1 hover:bg-neutral-800" href="/convert/videos">
-                Convert Videos
-              </Link>
-              <Link className="rounded-md border border-neutral-700 px-2.5 py-1 hover:bg-neutral-800" href="/compress/images">
-                Compress Images
-              </Link>
-              <Link className="rounded-md border border-neutral-700 px-2.5 py-1 hover:bg-neutral-800" href="/compress/videos">
-                Compress Videos
-              </Link>
-              <Link className="rounded-md border border-neutral-700 px-2.5 py-1 hover:bg-neutral-800" href="/upscale/images">
-                Upscale Images
-              </Link>
-              <ThemeToggle />
-            </nav>
+            <MainNav />
           </header>
           <main className="flex-1">{children}</main>
           <Footer />
