@@ -5,12 +5,10 @@
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev --filter=!@morphic/desktop",
+    "dev": "turbo dev",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "build:desktop": "pnpm --filter @morphic/desktop tauri build",
-    "dev:desktop": "pnpm --filter @morphic/desktop tauri dev"
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "turbo": "^2.5.0",
