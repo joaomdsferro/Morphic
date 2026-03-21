@@ -69,8 +69,33 @@ body {
   color: #2563eb;
 }
 
+[data-theme="light"] .text-blue-300 {
+  color: #1d4ed8;
+}
+
 [data-theme="light"] .bg-blue-600 {
   background-color: #2563eb;
+}
+
+[data-theme="light"] .bg-blue-950\/30 {
+  background-color: color-mix(in srgb, #2563eb 10%, #ffffff);
+}
+
+[data-theme="light"] .bg-blue-950\/60 {
+  background-color: color-mix(in srgb, #2563eb 16%, #ffffff);
+}
+
+[data-theme="light"] .hover\:bg-blue-900\/40:hover {
+  background-color: color-mix(in srgb, #2563eb 18%, #ffffff);
+}
+
+[data-theme="light"] .hover\:text-blue-300:hover {
+  color: #1e40af;
+}
+
+[data-theme="light"] .border-blue-900\/60,
+[data-theme="light"] .border-blue-900\/40 {
+  border-color: color-mix(in srgb, #2563eb 28%, #ffffff);
 }
 
 [data-theme="light"] .hover\:bg-blue-500:hover {
@@ -108,6 +133,22 @@ body {
 
 [data-theme="light"] .text-red-400 {
   color: #dc2626;
+}
+
+[data-theme="light"] .bg-amber-950\/20 {
+  background-color: color-mix(in srgb, #f59e0b 12%, #ffffff);
+}
+
+[data-theme="light"] .border-amber-800\/60 {
+  border-color: color-mix(in srgb, #d97706 45%, #ffffff);
+}
+
+[data-theme="light"] .text-amber-200 {
+  color: #92400e;
+}
+
+[data-theme="light"] .text-amber-300\/80 {
+  color: color-mix(in srgb, #b45309 88%, #000000);
 }
 
 /* Logo: invert to white in dark mode, keep black in light mode */
