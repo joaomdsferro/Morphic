@@ -22,6 +22,14 @@ const sections = [
     description: "Increase image dimensions for higher-resolution outputs.",
     items: [{ label: "Images", href: "/upscale/images", status: "Ready" }],
   },
+  {
+    title: "Import",
+    description: "Pull files from the cloud directly onto your device.",
+    items: [
+      { label: "Google Drive", href: "/import/google-drive", status: "Ready" },
+      { label: "Google Photos", href: "/import/google-photos", status: "Ready" },
+    ],
+  },
 ];
 
 export default function HomePage() {
