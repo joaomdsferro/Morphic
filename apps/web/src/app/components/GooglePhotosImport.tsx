@@ -88,9 +88,20 @@ export function GooglePhotosImport() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionRef = useRef<PickerSession | null>(null);
 
-  // Hydration-safe localStorage read
+  // Hydration-safe localStorage read + restore cached token
   useEffect(() => {
     setClientId(localStorage.getItem("morphic-gdrive-client-id") ?? "");
+
+    try {
+      const raw = localStorage.getItem("morphic-gphotos-token");
+      if (raw) {
+        const { token, expiresAt } = JSON.parse(raw) as { token: string; expiresAt: number };
+        if (Date.now() < expiresAt) setAccessToken(token);
+        else localStorage.removeItem("morphic-gphotos-token");
+      }
+    } catch {
+      localStorage.removeItem("morphic-gphotos-token");
+    }
   }, []);
 
   // Load GIS script
@@ -115,6 +126,10 @@ export function GooglePhotosImport() {
       callback: (response) => {
         if (response.access_token) {
           setAccessToken(response.access_token);
+          localStorage.setItem("morphic-gphotos-token", JSON.stringify({
+            token: response.access_token,
+            expiresAt: Date.now() + 55 * 60 * 1000, // 55 min (tokens last 60)
+          }));
           setError(null);
         } else {
           setError(`Authentication failed: ${response.error ?? "unknown error"}`);
@@ -133,18 +148,34 @@ export function GooglePhotosImport() {
   const fetchSelectedItems = useCallback(async (sessionId: string, token: string, append: boolean) => {
     setPhase("loading");
     try {
-      const res = await fetch(
-        `https://photospicker.googleapis.com/v1/mediaItems?sessionId=${sessionId}&pageSize=100`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) throw new Error(`Picker API error ${res.status}`);
-      const data = await res.json();
-      const incoming: PickerMediaItem[] = data.mediaItems ?? [];
+      const incoming: PickerMediaItem[] = [];
+      let nextPageToken: string | undefined;
+
+      do {
+        const params = new URLSearchParams({
+          sessionId,
+          pageSize: "100",
+        });
+        if (nextPageToken) params.set("pageToken", nextPageToken);
+
+        const res = await fetch(
+          `https://photospicker.googleapis.com/v1/mediaItems?${params.toString()}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error(`Picker API error ${res.status}`);
+
+        const data = await res.json();
+        incoming.push(...((data.mediaItems ?? []) as PickerMediaItem[]));
+        nextPageToken = data.nextPageToken;
+      } while (nextPageToken);
+
+      const incomingUnique = incoming.filter((item, index, arr) => arr.findIndex((v) => v.id === item.id) === index);
+
       setItems((prev) => {
-        if (!append) return incoming;
+        if (!append) return incomingUnique;
         // Merge, deduplicating by id
         const existingIds = new Set(prev.map((i) => i.id));
-        return [...prev, ...incoming.filter((i) => !existingIds.has(i.id))];
+        return [...prev, ...incomingUnique.filter((i) => !existingIds.has(i.id))];
       });
       setPhase("ready");
     } catch (e) {
@@ -203,16 +234,30 @@ export function GooglePhotosImport() {
 
   const reset = useCallback(() => {
     stopPolling();
-    setPhase(accessToken ? "signed-in" : "idle");
+    localStorage.removeItem("morphic-gphotos-token");
+    setAccessToken(null);
+    setPhase("idle");
     setItems([]);
     setDownloads({});
     setError(null);
     sessionRef.current = null;
-  }, [stopPolling, accessToken]);
+  }, [stopPolling]);
 
   const pickMore = useCallback(() => {
     if (accessToken) openPicker(accessToken, true);
   }, [accessToken, openPicker]);
+
+  // Removes an item from the local selection only.
+  // The Google Photos Picker API is read-only — apps cannot delete photos from
+  // a user's Google Photos library via API.
+  const removeItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    setDownloads((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
 
   const downloadItem = useCallback(async (item: PickerMediaItem) => {
     setDownloads((prev) => ({ ...prev, [item.id]: { status: "downloading", progress: 0 } }));
@@ -287,13 +332,14 @@ export function GooglePhotosImport() {
 
         const total = Number(response.headers.get("content-length") ?? 0);
         const reader = response.body!.getReader();
-        const chunks: Uint8Array<ArrayBuffer>[] = [];
+        const chunks: ArrayBuffer[] = [];
         let received = 0;
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          chunks.push(value as Uint8Array<ArrayBuffer>);
+          if (!value) continue;
+          chunks.push(value.slice().buffer);
           received += value.length;
           if (total > 0) {
             setDownloads((prev) => ({
@@ -442,6 +488,22 @@ export function GooglePhotosImport() {
         </div>
       )}
 
+      {items.length > 0 && items.every((i) => downloads[i.id]?.status === "done") && (
+        <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-amber-300">
+            All downloaded. Go to Google Photos to delete them.
+          </p>
+          <a
+            href="https://photos.google.com"
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 rounded-lg border border-amber-700/50 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-950/40 hover:cursor-pointer transition-colors"
+          >
+            Open Google Photos ↗
+          </a>
+        </div>
+      )}
+
       {items.length === 0 ? (
         <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 px-5 py-4 text-sm text-neutral-400">
           No items selected.
@@ -519,6 +581,14 @@ export function GooglePhotosImport() {
                       : dl?.status === "done"
                       ? "Downloaded ✓"
                       : "Download"}
+                  </button>
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    disabled={dl?.status === "downloading"}
+                    title="Remove from selection (Google Photos API does not support deletion)"
+                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-500 hover:text-red-400 hover:bg-red-950/30 hover:cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Remove
                   </button>
                 </li>
               );
