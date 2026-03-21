@@ -1,8 +1,6 @@
 [workspace]
 members = [
-    "apps/desktop/src-tauri",
     "packages/core-wasm",
-    "packages/core-native",
 ]
 resolver = "2"
 

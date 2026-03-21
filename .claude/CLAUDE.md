@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Morphic is a **privacy-first, local-first media toolkit**. All processing happens on the user's device — no uploads, no external API calls. It is a pnpm monorepo combining a Next.js web app with a Tauri desktop app, sharing Rust image-processing backends.
+Morphic is a **privacy-first, local-first media toolkit**. All processing happens on the user's device — no uploads, no external API calls. It is a pnpm monorepo centered on a Next.js web app with shared processing packages.
 
 Current version: `0.0.1` (early stage — expect bugs, breaking changes, and missing features).
 
@@ -13,10 +13,8 @@ Current version: `0.0.1` (early stage — expect bugs, breaking changes, and mis
 ```
 apps/
   web/          Next.js 16 web app (primary UI)
-  desktop/      Tauri 2 desktop wrapper around the web app
 
 packages/
-  core-native/  Rust image processing for Tauri (native targets)
   core-wasm/    Rust image processing compiled to WebAssembly
   ui/           Shared React components (DropZone, FormatBadge, ProgressBar)
   typescript-config/  Shared tsconfig presets
@@ -29,7 +27,6 @@ packages/
 | Layer | Technology |
 |---|---|
 | Web UI | Next.js 16, React 19, TypeScript 5.8, Tailwind CSS 4 |
-| Desktop shell | Tauri 2 (Rust) |
 | Image processing | Rust `image` 0.25, `ravif`, `jxl-oxide`, `rayon` |
 | WASM bridge | `wasm-bindgen` |
 | Monorepo tooling | pnpm 10, Turbo 2 |
@@ -38,9 +35,8 @@ packages/
 
 ## Architecture
 
-### Dual Processing Paths
+### Processing Paths
 - **Web app**: Converts images via the browser's `OffscreenCanvas` / Canvas API — 100% client-side.
-- **Desktop app**: Invokes the native Rust core via Tauri IPC for better performance.
 - **WASM core** (`core-wasm`): Compiled and available but not yet wired into the active UI.
 
 ### Theme System
@@ -60,7 +56,7 @@ packages/
 All image routes share the `ImageActionStudio` component, driven by a `mode` prop.
 
 ### Static Export
-Next.js is configured with `output: "export"` so Tauri can bundle the pre-built static files. During development, Tauri points to `localhost:3000`.
+Next.js is configured with `output: "export"` so the app can be deployed as static files. During development, run the web app via `localhost:3000`.
 
 ---
 
@@ -82,7 +78,6 @@ Next.js is configured with `output: "export"` so Tauri can bundle the pre-built 
 | Image upscale (2×, 4×) | ✅ Ready |
 | Video convert | 🚧 Route exists, not implemented |
 | Video compress | 🚧 Route exists, not implemented |
-| Desktop (Tauri) | 🚧 Shell ready, native commands partial |
 
 ---
 
@@ -94,9 +89,7 @@ Next.js is configured with `output: "export"` so Tauri can bundle the pre-built 
 | `apps/web/src/app/components/ThemeToggle.tsx` | Dark/light theme toggle; persists to localStorage |
 | `apps/web/src/app/globals.css` | Tailwind base + all theme overrides |
 | `apps/web/src/app/layout.tsx` | Root layout, nav, footer |
-| `packages/core-native/src/image.rs` | Native Rust image conversion logic |
 | `packages/core-wasm/src/lib.rs` | WASM image conversion + format lists |
-| `apps/desktop/src-tauri/src/lib.rs` | Tauri command handlers |
 
 ---
 
@@ -108,9 +101,6 @@ pnpm install
 
 # Run web app dev server
 pnpm --filter @morphic/web dev
-
-# Run desktop app (Tauri)
-pnpm --filter @morphic/desktop tauri dev
 
 # Build everything
 pnpm build

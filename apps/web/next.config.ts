@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Static export so Tauri can serve the built files directly.
+  // Static export for a fully browser-deployable build.
   output: "export",
   // next/image optimization is not available in static export.
   images: {
