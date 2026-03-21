@@ -1,8 +1,8 @@
 # Morphic
 
-Morphic was born as an idea to focus on local, privacy and efficiency/performance first. The rest can come later... Still early days for the tool, but I am working on:
+Morphic was born as an idea to focus on local processing, privacy, and efficiency/performance first. The rest can come later... Still early days for the tool, but I am working on:
 
-Image conversion ✅ (Expect possible bugs or missing file formats, issues can be filled for that)
+Image conversion ✅ (Expect possible bugs or missing file formats, issues can be filed for that)
 Video conversion ⌛ (WIP, needs further testing and more implementations)
 Compression ✅ (Technically working, but I haven't tested much)
 Upscaling ✅ (Same here)
