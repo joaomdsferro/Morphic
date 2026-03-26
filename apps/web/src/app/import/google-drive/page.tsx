@@ -11,8 +11,9 @@ export default function GoogleDrivePage() {
           Google Drive
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-neutral-400 sm:text-base">
-          Sign in with your Google account to browse and download your largest Drive files.
-          Your OAuth token stays in the browser — nothing is sent to any Morphic server.
+          Sign in with your Google account to browse and download your largest
+          Drive files. Your OAuth token stays in the browser — nothing is sent
+          to any Morphic server.
         </p>
       </section>
 

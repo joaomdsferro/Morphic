@@ -36,14 +36,19 @@ interface DownloadState {
 
 declare global {
   interface Window {
-    showDirectoryPicker(options?: { mode?: "read" | "readwrite" }): Promise<FileSystemDirectoryHandle>;
+    showDirectoryPicker(options?: {
+      mode?: "read" | "readwrite";
+    }): Promise<FileSystemDirectoryHandle>;
     google?: {
       accounts: {
         oauth2: {
           initTokenClient: (config: {
             client_id: string;
             scope: string;
-            callback: (response: { access_token?: string; error?: string }) => void;
+            callback: (response: {
+              access_token?: string;
+              error?: string;
+            }) => void;
           }) => { requestAccessToken: () => void };
         };
       };
@@ -70,11 +75,11 @@ function resolutionLabel(item: PickerMediaItem) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 type Phase =
-  | "idle"           // not signed in
-  | "signed-in"      // signed in, waiting for user to open picker
-  | "picking"        // picker tab open, polling
-  | "loading"        // fetching selected items
-  | "ready";         // items available
+  | "idle" // not signed in
+  | "signed-in" // signed in, waiting for user to open picker
+  | "picking" // picker tab open, polling
+  | "loading" // fetching selected items
+  | "ready"; // items available
 
 export function GooglePhotosImport() {
   const [clientId, setClientId] = useState("");
@@ -84,7 +89,9 @@ export function GooglePhotosImport() {
   const [downloads, setDownloads] = useState<Record<string, DownloadState>>({});
   const [error, setError] = useState<string | null>(null);
   const [gisLoaded, setGisLoaded] = useState(false);
-  const tokenClientRef = useRef<{ requestAccessToken: () => void } | null>(null);
+  const tokenClientRef = useRef<{ requestAccessToken: () => void } | null>(
+    null,
+  );
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionRef = useRef<PickerSession | null>(null);
 
@@ -95,7 +102,10 @@ export function GooglePhotosImport() {
     try {
       const raw = localStorage.getItem("morphic-gphotos-token");
       if (raw) {
-        const { token, expiresAt } = JSON.parse(raw) as { token: string; expiresAt: number };
+        const { token, expiresAt } = JSON.parse(raw) as {
+          token: string;
+          expiresAt: number;
+        };
         if (Date.now() < expiresAt) setAccessToken(token);
         else localStorage.removeItem("morphic-gphotos-token");
       }
@@ -106,7 +116,9 @@ export function GooglePhotosImport() {
 
   // Load GIS script
   useEffect(() => {
-    if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+    if (
+      document.querySelector('script[src*="accounts.google.com/gsi/client"]')
+    ) {
       setGisLoaded(true);
       return;
     }
@@ -126,102 +138,134 @@ export function GooglePhotosImport() {
       callback: (response) => {
         if (response.access_token) {
           setAccessToken(response.access_token);
-          localStorage.setItem("morphic-gphotos-token", JSON.stringify({
-            token: response.access_token,
-            expiresAt: Date.now() + 55 * 60 * 1000, // 55 min (tokens last 60)
-          }));
+          localStorage.setItem(
+            "morphic-gphotos-token",
+            JSON.stringify({
+              token: response.access_token,
+              expiresAt: Date.now() + 55 * 60 * 1000, // 55 min (tokens last 60)
+            }),
+          );
           setError(null);
         } else {
-          setError(`Authentication failed: ${response.error ?? "unknown error"}`);
+          setError(
+            `Authentication failed: ${response.error ?? "unknown error"}`,
+          );
         }
       },
     });
   }, [gisLoaded, clientId]);
 
   // Cleanup polling on unmount
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    },
+    [],
+  );
 
   const stopPolling = useCallback(() => {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-  }, []);
-
-  const fetchSelectedItems = useCallback(async (sessionId: string, token: string, append: boolean) => {
-    setPhase("loading");
-    try {
-      const incoming: PickerMediaItem[] = [];
-      let nextPageToken: string | undefined;
-
-      do {
-        const params = new URLSearchParams({
-          sessionId,
-          pageSize: "100",
-        });
-        if (nextPageToken) params.set("pageToken", nextPageToken);
-
-        const res = await fetch(
-          `https://photospicker.googleapis.com/v1/mediaItems?${params.toString()}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!res.ok) throw new Error(`Picker API error ${res.status}`);
-
-        const data = await res.json();
-        incoming.push(...((data.mediaItems ?? []) as PickerMediaItem[]));
-        nextPageToken = data.nextPageToken;
-      } while (nextPageToken);
-
-      const incomingUnique = incoming.filter((item, index, arr) => arr.findIndex((v) => v.id === item.id) === index);
-
-      setItems((prev) => {
-        if (!append) return incomingUnique;
-        // Merge, deduplicating by id
-        const existingIds = new Set(prev.map((i) => i.id));
-        return [...prev, ...incomingUnique.filter((i) => !existingIds.has(i.id))];
-      });
-      setPhase("ready");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setPhase("idle");
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
     }
   }, []);
 
-  const openPicker = useCallback(async (token: string, append = false) => {
-    setError(null);
-    try {
-      // Create a picker session
-      const res = await fetch("https://photospicker.googleapis.com/v1/sessions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Failed to create picker session: ${res.status}`);
-      const session: PickerSession = await res.json();
-      sessionRef.current = session;
+  const fetchSelectedItems = useCallback(
+    async (sessionId: string, token: string, append: boolean) => {
+      setPhase("loading");
+      try {
+        const incoming: PickerMediaItem[] = [];
+        let nextPageToken: string | undefined;
 
-      // Open Google's hosted picker in a new tab
-      window.open(session.pickerUri, "_blank");
-      setPhase("picking");
+        do {
+          const params = new URLSearchParams({
+            sessionId,
+            pageSize: "100",
+          });
+          if (nextPageToken) params.set("pageToken", nextPageToken);
 
-      // Poll until the user finishes picking
-      pollRef.current = setInterval(async () => {
-        try {
-          const pollRes = await fetch(
-            `https://photospicker.googleapis.com/v1/sessions/${session.id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+          const res = await fetch(
+            `https://photospicker.googleapis.com/v1/mediaItems?${params.toString()}`,
+            { headers: { Authorization: `Bearer ${token}` } },
           );
-          if (!pollRes.ok) { stopPolling(); return; }
-          const pollData: PickerSession = await pollRes.json();
-          if (pollData.mediaItemsSet) {
+          if (!res.ok) throw new Error(`Picker API error ${res.status}`);
+
+          const data = await res.json();
+          incoming.push(...((data.mediaItems ?? []) as PickerMediaItem[]));
+          nextPageToken = data.nextPageToken;
+        } while (nextPageToken);
+
+        const incomingUnique = incoming.filter(
+          (item, index, arr) =>
+            arr.findIndex((v) => v.id === item.id) === index,
+        );
+
+        setItems((prev) => {
+          if (!append) return incomingUnique;
+          // Merge, deduplicating by id
+          const existingIds = new Set(prev.map((i) => i.id));
+          return [
+            ...prev,
+            ...incomingUnique.filter((i) => !existingIds.has(i.id)),
+          ];
+        });
+        setPhase("ready");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        setPhase("idle");
+      }
+    },
+    [],
+  );
+
+  const openPicker = useCallback(
+    async (token: string, append = false) => {
+      setError(null);
+      try {
+        // Create a picker session
+        const res = await fetch(
+          "https://photospicker.googleapis.com/v1/sessions",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (!res.ok)
+          throw new Error(`Failed to create picker session: ${res.status}`);
+        const session: PickerSession = await res.json();
+        sessionRef.current = session;
+
+        // Open Google's hosted picker in a new tab
+        window.open(session.pickerUri, "_blank");
+        setPhase("picking");
+
+        // Poll until the user finishes picking
+        pollRef.current = setInterval(async () => {
+          try {
+            const pollRes = await fetch(
+              `https://photospicker.googleapis.com/v1/sessions/${session.id}`,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            if (!pollRes.ok) {
+              stopPolling();
+              return;
+            }
+            const pollData: PickerSession = await pollRes.json();
+            if (pollData.mediaItemsSet) {
+              stopPolling();
+              await fetchSelectedItems(session.id, token, append);
+            }
+          } catch {
             stopPolling();
-            await fetchSelectedItems(session.id, token, append);
           }
-        } catch {
-          stopPolling();
-        }
-      }, 2500);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setPhase("idle");
-    }
-  }, [stopPolling, fetchSelectedItems]);
+        }, 2500);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        setPhase("idle");
+      }
+    },
+    [stopPolling, fetchSelectedItems],
+  );
 
   const connect = useCallback(() => {
     tokenClientRef.current?.requestAccessToken();
@@ -259,50 +303,68 @@ export function GooglePhotosImport() {
     });
   }, []);
 
-  const downloadItem = useCallback(async (item: PickerMediaItem) => {
-    setDownloads((prev) => ({ ...prev, [item.id]: { status: "downloading", progress: 0 } }));
-    try {
-      const url = item.type === "VIDEO"
-        ? `${item.mediaFile.baseUrl}=dv`
-        : `${item.mediaFile.baseUrl}=d`;
+  const downloadItem = useCallback(
+    async (item: PickerMediaItem) => {
+      setDownloads((prev) => ({
+        ...prev,
+        [item.id]: { status: "downloading", progress: 0 },
+      }));
+      try {
+        const url =
+          item.type === "VIDEO"
+            ? `${item.mediaFile.baseUrl}=dv`
+            : `${item.mediaFile.baseUrl}=d`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      const total = Number(response.headers.get("content-length") ?? 0);
-      const reader = response.body!.getReader();
-      const chunks: Uint8Array[] = [];
-      let received = 0;
+        const total = Number(response.headers.get("content-length") ?? 0);
+        const reader = response.body!.getReader();
+        const chunks: Uint8Array[] = [];
+        let received = 0;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        received += value.length;
-        if (total > 0) {
-          setDownloads((prev) => ({
-            ...prev,
-            [item.id]: { status: "downloading", progress: Math.round((received / total) * 100) },
-          }));
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (total > 0) {
+            setDownloads((prev) => ({
+              ...prev,
+              [item.id]: {
+                status: "downloading",
+                progress: Math.round((received / total) * 100),
+              },
+            }));
+          }
         }
+
+        const blob = new Blob(chunks as BlobPart[], {
+          type: item.mediaFile.mimeType,
+        });
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.download = item.mediaFile.filename;
+        anchor.click();
+        URL.revokeObjectURL(objectUrl);
+
+        setDownloads((prev) => ({
+          ...prev,
+          [item.id]: { status: "done", progress: 100 },
+        }));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setDownloads((prev) => ({
+          ...prev,
+          [item.id]: { status: "error", progress: 0, error: msg },
+        }));
       }
-
-      const blob = new Blob(chunks as BlobPart[], { type: item.mediaFile.mimeType });
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = item.mediaFile.filename;
-      anchor.click();
-      URL.revokeObjectURL(objectUrl);
-
-      setDownloads((prev) => ({ ...prev, [item.id]: { status: "done", progress: 100 } }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setDownloads((prev) => ({ ...prev, [item.id]: { status: "error", progress: 0, error: msg } }));
-    }
-  }, [accessToken]);
+    },
+    [accessToken],
+  );
 
   const downloadAll = useCallback(async () => {
     const pending = items.filter((i) => downloads[i.id]?.status !== "done");
@@ -311,7 +373,10 @@ export function GooglePhotosImport() {
     // Try folder picker (one Allow click for all files).
     // Falls back to anchor downloads if the API is blocked or unavailable.
     let dirHandle: FileSystemDirectoryHandle | null = null;
-    if ("showDirectoryPicker" in window && typeof window.showDirectoryPicker === "function") {
+    if (
+      "showDirectoryPicker" in window &&
+      typeof window.showDirectoryPicker === "function"
+    ) {
       try {
         dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
       } catch (e) {
@@ -321,13 +386,19 @@ export function GooglePhotosImport() {
     }
 
     async function downloadOne(item: PickerMediaItem) {
-      setDownloads((prev) => ({ ...prev, [item.id]: { status: "downloading", progress: 0 } }));
+      setDownloads((prev) => ({
+        ...prev,
+        [item.id]: { status: "downloading", progress: 0 },
+      }));
       try {
-        const url = item.type === "VIDEO"
-          ? `${item.mediaFile.baseUrl}=dv`
-          : `${item.mediaFile.baseUrl}=d`;
+        const url =
+          item.type === "VIDEO"
+            ? `${item.mediaFile.baseUrl}=dv`
+            : `${item.mediaFile.baseUrl}=d`;
 
-        const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const total = Number(response.headers.get("content-length") ?? 0);
@@ -344,13 +415,19 @@ export function GooglePhotosImport() {
           if (total > 0) {
             setDownloads((prev) => ({
               ...prev,
-              [item.id]: { status: "downloading", progress: Math.round((received / total) * 100) },
+              [item.id]: {
+                status: "downloading",
+                progress: Math.round((received / total) * 100),
+              },
             }));
           }
         }
 
         if (dirHandle) {
-          const fileHandle = await dirHandle.getFileHandle(item.mediaFile.filename, { create: true });
+          const fileHandle = await dirHandle.getFileHandle(
+            item.mediaFile.filename,
+            { create: true },
+          );
           const writable = await fileHandle.createWritable();
           for (const chunk of chunks) await writable.write(chunk);
           await writable.close();
@@ -364,10 +441,16 @@ export function GooglePhotosImport() {
           URL.revokeObjectURL(objectUrl);
         }
 
-        setDownloads((prev) => ({ ...prev, [item.id]: { status: "done", progress: 100 } }));
+        setDownloads((prev) => ({
+          ...prev,
+          [item.id]: { status: "done", progress: 100 },
+        }));
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        setDownloads((prev) => ({ ...prev, [item.id]: { status: "error", progress: 0, error: msg } }));
+        setDownloads((prev) => ({
+          ...prev,
+          [item.id]: { status: "error", progress: 0, error: msg },
+        }));
       }
     }
 
@@ -384,7 +467,10 @@ export function GooglePhotosImport() {
     return (
       <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5 text-sm text-neutral-400">
         No Google credentials configured.{" "}
-        <a href="/import/google-drive" className="text-blue-400 hover:underline hover:cursor-pointer">
+        <a
+          href="/import/google-drive"
+          className="text-blue-400 hover:underline hover:cursor-pointer"
+        >
           Set up your Client ID in Google Drive first
         </a>{" "}
         — the same credentials work here.
@@ -403,7 +489,9 @@ export function GooglePhotosImport() {
         )}
         <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5 flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-neutral-100">Google Photos</h2>
+            <h2 className="text-base font-semibold text-neutral-100">
+              Google Photos
+            </h2>
             <p className="mt-0.5 text-sm text-neutral-400">
               Sign in to open the Google Photos picker.
             </p>
@@ -458,7 +546,8 @@ export function GooglePhotosImport() {
           Google Photos picker opened in a new tab
         </p>
         <p className="text-xs text-neutral-500">
-          Select your files there, then confirm — this page will update automatically.
+          Select your files there, then confirm — this page will update
+          automatically.
         </p>
         <button
           onClick={reset}
@@ -488,21 +577,22 @@ export function GooglePhotosImport() {
         </div>
       )}
 
-      {items.length > 0 && items.every((i) => downloads[i.id]?.status === "done") && (
-        <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-amber-300">
-            All downloaded. Go to Google Photos to delete them.
-          </p>
-          <a
-            href="https://photos.google.com"
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 rounded-lg border border-amber-700/50 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-950/40 hover:cursor-pointer transition-colors"
-          >
-            Open Google Photos ↗
-          </a>
-        </div>
-      )}
+      {items.length > 0 &&
+        items.every((i) => downloads[i.id]?.status === "done") && (
+          <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-4 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-amber-300">
+              All downloaded. Go to Google Photos to delete them.
+            </p>
+            <a
+              href="https://photos.google.com"
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg border border-amber-700/50 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-950/40 hover:cursor-pointer transition-colors"
+            >
+              Open Google Photos ↗
+            </a>
+          </div>
+        )}
 
       {items.length === 0 ? (
         <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 px-5 py-4 text-sm text-neutral-400">
@@ -517,7 +607,11 @@ export function GooglePhotosImport() {
             <div className="flex items-center gap-3">
               <button
                 onClick={downloadAll}
-                disabled={items.every((i) => downloads[i.id]?.status === "done" || downloads[i.id]?.status === "downloading")}
+                disabled={items.every(
+                  (i) =>
+                    downloads[i.id]?.status === "done" ||
+                    downloads[i.id]?.status === "downloading",
+                )}
                 className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 hover:cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Download All
@@ -559,7 +653,9 @@ export function GooglePhotosImport() {
                       <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-neutral-800">
                         <div
                           className="h-full bg-blue-500 transition-all duration-150"
-                          style={{ width: `${dl.progress > 0 ? dl.progress : 15}%` }}
+                          style={{
+                            width: `${dl.progress > 0 ? dl.progress : 15}%`,
+                          }}
                         />
                       </div>
                     )}
@@ -577,10 +673,12 @@ export function GooglePhotosImport() {
                     }`}
                   >
                     {dl?.status === "downloading"
-                      ? dl.progress > 0 ? `${dl.progress}%` : "…"
+                      ? dl.progress > 0
+                        ? `${dl.progress}%`
+                        : "…"
                       : dl?.status === "done"
-                      ? "Downloaded ✓"
-                      : "Download"}
+                        ? "Downloaded ✓"
+                        : "Download"}
                   </button>
                   <button
                     onClick={() => removeItem(item.id)}

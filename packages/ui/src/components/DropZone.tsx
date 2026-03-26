@@ -18,7 +18,7 @@ export function DropZone({ onFiles, accept, className = "" }: DropZoneProps) {
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) onFiles(files);
     },
-    [onFiles]
+    [onFiles],
   );
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
