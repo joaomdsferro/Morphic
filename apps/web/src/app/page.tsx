@@ -23,11 +23,20 @@ const sections = [
     items: [{ label: "Images", href: "/upscale/images", status: "Ready" }],
   },
   {
+    title: "Compare",
+    description: "Check what changed between two files with local diff tools.",
+    items: [{ label: "JSON", href: "/compare/json", status: "Ready" }],
+  },
+  {
     title: "Import",
     description: "Pull files from the cloud directly onto your device.",
     items: [
       { label: "Google Drive", href: "/import/google-drive", status: "Ready" },
-      { label: "Google Photos", href: "/import/google-photos", status: "Ready" },
+      {
+        label: "Google Photos",
+        href: "/import/google-photos",
+        status: "Ready",
+      },
     ],
   },
 ];
@@ -36,21 +45,31 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">Local-first media toolkit</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+          Local-first media toolkit
+        </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-neutral-100 sm:text-4xl">
           Convert, compress, and upscale from dedicated workflows
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-neutral-400 sm:text-base">
-          Morphic now separates each action by media type so the intended workflow is always clear.
-          Pick an action below to open the matching page.
+          Morphic now separates each action by media type so the intended
+          workflow is always clear. Pick an action below to open the matching
+          page.
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         {sections.map((section) => (
-          <article key={section.title} className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <h2 className="text-lg font-semibold text-neutral-100">{section.title}</h2>
-            <p className="mt-1 text-sm text-neutral-400">{section.description}</p>
+          <article
+            key={section.title}
+            className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4"
+          >
+            <h2 className="text-lg font-semibold text-neutral-100">
+              {section.title}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-400">
+              {section.description}
+            </p>
             <ul className="mt-4 space-y-2">
               {section.items.map((item) => (
                 <li key={item.href}>
