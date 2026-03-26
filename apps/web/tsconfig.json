@@ -1,6 +1,7 @@
 {
   "extends": "@morphic/typescript-config/nextjs.json",
   "compilerOptions": {
+    "jsx": "preserve",
     "paths": {
       "@/*": [
         "./src/*"
