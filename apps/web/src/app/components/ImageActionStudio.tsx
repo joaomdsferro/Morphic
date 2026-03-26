@@ -66,8 +66,12 @@ function FormatPill({ format }: { format: string }) {
 }
 
 /** Encode a PNG Uint8Array as a single-image ICO binary. */
-function buildIco(pngBytes: Uint8Array, width: number, height: number): Uint8Array {
-  const w = width >= 256 ? 0 : width;   // 0 means 256 in the ICO spec
+function buildIco(
+  pngBytes: Uint8Array,
+  width: number,
+  height: number,
+): Uint8Array {
+  const w = width >= 256 ? 0 : width; // 0 means 256 in the ICO spec
   const h = height >= 256 ? 0 : height;
   const offset = 6 + 16; // ICONDIR header + 1 ICONDIRENTRY
   const buf = new Uint8Array(offset + pngBytes.length);
@@ -77,12 +81,14 @@ function buildIco(pngBytes: Uint8Array, width: number, height: number): Uint8Arr
   view.setUint16(2, 1, true); // type = 1 (ICO)
   view.setUint16(4, 1, true); // image count = 1
   // ICONDIRENTRY
-  buf[6] = w;  buf[7] = h;
-  buf[8] = 0;  buf[9] = 0;   // color count, reserved
-  view.setUint16(10, 1,  true);               // planes
-  view.setUint16(12, 32, true);               // bit count
-  view.setUint32(14, pngBytes.length, true);  // image data size
-  view.setUint32(18, offset,          true);  // image data offset
+  buf[6] = w;
+  buf[7] = h;
+  buf[8] = 0;
+  buf[9] = 0; // color count, reserved
+  view.setUint16(10, 1, true); // planes
+  view.setUint16(12, 32, true); // bit count
+  view.setUint32(14, pngBytes.length, true); // image data size
+  view.setUint32(18, offset, true); // image data offset
   buf.set(pngBytes, offset);
   return buf;
 }
@@ -105,8 +111,10 @@ async function processImage(
   upscaleFactor: 2 | 4,
 ) {
   const bitmap = await createImageBitmap(file);
-  const width = mode === "upscale" ? bitmap.width * upscaleFactor : bitmap.width;
-  const height = mode === "upscale" ? bitmap.height * upscaleFactor : bitmap.height;
+  const width =
+    mode === "upscale" ? bitmap.width * upscaleFactor : bitmap.width;
+  const height =
+    mode === "upscale" ? bitmap.height * upscaleFactor : bitmap.height;
 
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -141,7 +149,10 @@ async function processImage(
     const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><image href="data:image/png;base64,${b64}" width="${width}" height="${height}"/></svg>`;
     blob = new Blob([svgStr], { type: "image/svg+xml" });
   } else {
-    const targetType = mode === "convert" ? FORMAT_MIME[outputFormat] : file.type || "image/jpeg";
+    const targetType =
+      mode === "convert"
+        ? FORMAT_MIME[outputFormat]
+        : file.type || "image/jpeg";
     const targetQuality = mode === "compress" ? quality / 100 : 0.92;
     blob = await canvas.convertToBlob({
       type: targetType,
@@ -173,7 +184,10 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
     };
   }, []);
 
-  const pendingJobs = useMemo(() => jobs.filter((job) => job.status === "pending").length, [jobs]);
+  const pendingJobs = useMemo(
+    () => jobs.filter((job) => job.status === "pending").length,
+    [jobs],
+  );
 
   const onAddFiles = useCallback((files: File[]) => {
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
@@ -191,7 +205,9 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
   }, []);
 
   const updateJob = useCallback((id: string, patch: Partial<ImageJob>) => {
-    setJobs((current) => current.map((job) => (job.id === id ? { ...job, ...patch } : job)));
+    setJobs((current) =>
+      current.map((job) => (job.id === id ? { ...job, ...patch } : job)),
+    );
   }, []);
 
   const runJob = useCallback(
@@ -202,7 +218,13 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
       updateJob(id, { status: "processing", error: undefined });
 
       try {
-        const blob = await processImage(job.file, mode, outputFormat, quality, upscaleFactor);
+        const blob = await processImage(
+          job.file,
+          mode,
+          outputFormat,
+          quality,
+          upscaleFactor,
+        );
         const resultUrl = URL.createObjectURL(blob);
         updateJob(id, { status: "done", resultUrl, resultSize: blob.size });
       } catch (error) {
@@ -235,7 +257,12 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
     });
   }, []);
 
-  const dropHint = mode === "convert" ? "Convert" : mode === "compress" ? "Compress" : "Upscale";
+  const dropHint =
+    mode === "convert"
+      ? "Convert"
+      : mode === "compress"
+        ? "Compress"
+        : "Upscale";
 
   return (
     <div className="space-y-4">
@@ -251,8 +278,12 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
             event.target.value = "";
           }}
         />
-        <p className="text-sm text-neutral-300">Drop images or click to browse</p>
-        <p className="mt-1 text-xs text-neutral-500">PNG · JPEG · WebP · AVIF · GIF · TIFF</p>
+        <p className="text-sm text-neutral-300">
+          Drop images or click to browse
+        </p>
+        <p className="mt-1 text-xs text-neutral-500">
+          PNG · JPEG · WebP · AVIF · GIF · TIFF
+        </p>
       </label>
 
       <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
@@ -263,7 +294,9 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
               <select
                 className="rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm"
                 value={outputFormat}
-                onChange={(event) => setOutputFormat(event.target.value as OutputFormat)}
+                onChange={(event) =>
+                  setOutputFormat(event.target.value as OutputFormat)
+                }
               >
                 {FORMAT_OPTIONS.map((format) => (
                   <option key={format.id} value={format.id}>
@@ -295,7 +328,9 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
               <select
                 className="rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm"
                 value={upscaleFactor}
-                onChange={(event) => setUpscaleFactor(Number(event.target.value) as 2 | 4)}
+                onChange={(event) =>
+                  setUpscaleFactor(Number(event.target.value) as 2 | 4)
+                }
               >
                 <option value={2}>2x</option>
                 <option value={4}>4x</option>
@@ -308,7 +343,9 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
       {jobs.length > 0 && (
         <section className="rounded-xl border border-neutral-800 bg-neutral-900/30 p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-neutral-400">{jobs.length} file(s) selected</p>
+            <p className="text-xs text-neutral-400">
+              {jobs.length} file(s) selected
+            </p>
             <div className="flex gap-2">
               <button
                 onClick={clearDone}
@@ -329,9 +366,15 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
 
           <ul className="flex flex-col gap-2">
             {jobs.map((job) => {
-              const outputExt = mode === "convert" ? outputFormat : extFromFile(job.file.name);
+              const outputExt =
+                mode === "convert" ? outputFormat : extFromFile(job.file.name);
               const inputExt = extFromFile(job.file.name);
-              const actionLabel = mode === "convert" ? "Convert" : mode === "compress" ? "Compress" : "Upscale";
+              const actionLabel =
+                mode === "convert"
+                  ? "Convert"
+                  : mode === "compress"
+                    ? "Compress"
+                    : "Upscale";
 
               return (
                 <li
@@ -340,13 +383,14 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
                     job.status === "done"
                       ? "border-green-900/50 bg-neutral-900/60"
                       : job.status === "error"
-                      ? "border-red-900/50 bg-neutral-900/60"
-                      : "border-neutral-800 bg-neutral-900/60"
+                        ? "border-red-900/50 bg-neutral-900/60"
+                        : "border-neutral-800 bg-neutral-900/60"
                   }`}
                 >
                   <div className="flex items-center gap-3 p-3">
                     {/* Thumbnail */}
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={job.previewUrl}
                         alt=""
@@ -458,7 +502,9 @@ export function ImageActionStudio({ mode }: { mode: ImageMode }) {
                         onClick={() => {
                           if (job.resultUrl) URL.revokeObjectURL(job.resultUrl);
                           URL.revokeObjectURL(job.previewUrl);
-                          setJobs((current) => current.filter((j) => j.id !== job.id));
+                          setJobs((current) =>
+                            current.filter((j) => j.id !== job.id),
+                          );
                         }}
                         aria-label="Remove"
                         className="rounded-lg p-1.5 text-neutral-700 hover:bg-neutral-800 hover:text-neutral-400 transition-colors"
