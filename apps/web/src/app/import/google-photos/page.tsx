@@ -11,8 +11,9 @@ export default function GooglePhotosPage() {
           Google Photos
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-neutral-400 sm:text-base">
-          Browse and download your photos and videos directly from Google Photos.
-          Videos are shown first — they&apos;re usually the biggest storage consumers.
+          Browse and download your photos and videos directly from Google
+          Photos. Videos are shown first — they&apos;re usually the biggest
+          storage consumers.
         </p>
       </section>
 

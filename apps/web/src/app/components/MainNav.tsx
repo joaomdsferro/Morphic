@@ -16,6 +16,7 @@ const navItems: NavItem[] = [
   { href: "/compress/images", label: "Compress Images" },
   { href: "/compress/videos", label: "Compress Videos" },
   { href: "/upscale/images", label: "Upscale Images" },
+  { href: "/compare/json", label: "Compare JSON", isNew: true },
   { href: "/import", label: "Import", isNew: true },
 ];
 
