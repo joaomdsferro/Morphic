@@ -1,0 +1,19 @@
+[project]
+name = "morphic-pdf-translator"
+version = "0.1.0"
+description = "Local PDF translator runtime for Morphic"
+requires-python = ">=3.10"
+dependencies = [
+  "argostranslate>=1.9.6",
+  "pymupdf>=1.24.0",
+]
+
+[project.optional-dependencies]
+nllb = [
+  "sentencepiece>=0.2.0",
+  "torch>=2.4.0",
+  "transformers>=4.44.0",
+]
+
+[tool.uv]
+package = false

@@ -11,6 +11,11 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  {
+    href: "/file-manipulation/translate-pdf",
+    label: "Translate PDF",
+    isNew: true,
+  },
   { href: "/convert/images", label: "Convert Images" },
   { href: "/convert/videos", label: "Convert Videos" },
   { href: "/compress/images", label: "Compress Images" },

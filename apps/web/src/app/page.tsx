@@ -2,6 +2,17 @@ import Link from "next/link";
 
 const sections = [
   {
+    title: "File Manipulation",
+    description: "Translate and transform documents privately on your device.",
+    items: [
+      {
+        label: "Translate PDF",
+        href: "/file-manipulation/translate-pdf",
+        status: "New",
+      },
+    ],
+  },
+  {
     title: "Convert",
     description: "Change file formats quickly while staying local.",
     items: [

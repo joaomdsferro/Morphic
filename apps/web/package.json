@@ -1,19 +1,23 @@
 {
   "name": "@morphic/web",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
+    "predev": "bash ../../tools/ensure_pdf_translate_env.sh",
     "dev": "next dev --turbopack",
+    "prebuild": "bash ../../tools/ensure_pdf_translate_env.sh",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@morphic/ui": "workspace:*",
     "next": "^16.2.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.296",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@morphic/ui": "workspace:*"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@morphic/typescript-config": "workspace:*",

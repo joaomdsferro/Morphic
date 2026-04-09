@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Static export for a fully browser-deployable build.
-  output: "export",
+  // Keep static export optional; local PDF translation requires server routes.
+  output: process.env.MORPHIC_STATIC_EXPORT === "1" ? "export" : undefined,
   // next/image optimization is not available in static export.
   images: {
     unoptimized: true,
